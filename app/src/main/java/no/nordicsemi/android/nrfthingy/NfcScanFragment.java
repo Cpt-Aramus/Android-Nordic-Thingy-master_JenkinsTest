@@ -3,15 +3,12 @@ package no.nordicsemi.android.nrfthingy;
 import android.bluetooth.BluetoothDevice;
 import android.nfc.NfcAdapter;
 import android.os.Bundle;
-
 import androidx.fragment.app.Fragment;
-
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import no.nordicsemi.android.nrfthingy.common.Utils;
 
 /**
@@ -24,12 +21,8 @@ import no.nordicsemi.android.nrfthingy.common.Utils;
  */
 public class NfcScanFragment extends Fragment {
 
-    //necessary TextViews
-    private TextView appLinkWritten;
     private TextView appLinkBlank;
-    private TextView idWritten;
     private TextView idBlank;
-    private TextView websiteLinkWritten;
     private TextView websiteLinkBlank;
     private NfcAdapter usedNfcAdapter;
 
@@ -74,22 +67,22 @@ public class NfcScanFragment extends Fragment {
         usedNfcAdapter = NfcAdapter.getDefaultAdapter(this.getContext());
         if(usedNfcAdapter == null) {
             Toast.makeText(this.getContext(), "This device does not support NFC!", Toast.LENGTH_LONG).show();
-            return;
         }
-
-
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         final View rootView = inflater.inflate(R.layout.fragment_nfc_scanning, container, false);
-        nfcLink = getArguments().getString(NFC_LINK);
-        nfcId = getArguments().getString(NFC_ID);
-        nfcUrl = getArguments().getString(NFC_URL);
-        appLinkWritten = rootView.findViewById(R.id.app_link_written);
-        idWritten = rootView.findViewById(R.id.mac_address_written);
-        websiteLinkWritten = rootView.findViewById(R.id.website_link_written);
+        if (getArguments() != null) {
+            nfcLink = getArguments().getString(NFC_LINK);
+        }
+        if (getArguments() != null) {
+            nfcId = getArguments().getString(NFC_ID);
+        }
+        if (getArguments() != null) {
+            nfcUrl = getArguments().getString(NFC_URL);
+        }
         appLinkBlank = rootView.findViewById(R.id.app_link_blank);
         appLinkBlank.setText(nfcLink);
         idBlank = rootView.findViewById(R.id.mac_address_blank);
@@ -98,9 +91,7 @@ public class NfcScanFragment extends Fragment {
         websiteLinkBlank.setText(nfcUrl);
         // Inflate the layout for this fragment
         return rootView;
-
     }
-
 }
 
 
