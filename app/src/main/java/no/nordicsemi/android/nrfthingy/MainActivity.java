@@ -56,11 +56,9 @@ import android.location.LocationManager;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
-import android.nfc.FormatException;
 import android.nfc.NdefMessage;
 import android.nfc.NdefRecord;
 import android.nfc.NfcAdapter;
-import android.nfc.Tag;
 import android.nfc.tech.NfcF;
 import android.os.Build;
 import android.os.Bundle;
@@ -81,17 +79,6 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.navigation.NavigationView;
-
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.List;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.ActionBarDrawerToggle;
@@ -105,6 +92,16 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
+
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.navigation.NavigationView;
+
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.List;
+
 import no.nordicsemi.android.nrfthingy.common.AboutActivity;
 import no.nordicsemi.android.nrfthingy.common.EnableNFCDialogFragment;
 import no.nordicsemi.android.nrfthingy.common.MessageDialogFragment;
@@ -135,9 +132,7 @@ import static no.nordicsemi.android.nrfthingy.common.Utils.CLOUD_FRAGMENT;
 import static no.nordicsemi.android.nrfthingy.common.Utils.CURRENT_DEVICE;
 import static no.nordicsemi.android.nrfthingy.common.Utils.ENVIRONMENT_FRAGMENT;
 import static no.nordicsemi.android.nrfthingy.common.Utils.EXTRA_ADDRESS_DATA;
-import static no.nordicsemi.android.nrfthingy.common.Utils.EXTRA_DATA_URL;
 import static no.nordicsemi.android.nrfthingy.common.Utils.EXTRA_DEVICE;
-import static no.nordicsemi.android.nrfthingy.common.Utils.EXTRA_URI;
 import static no.nordicsemi.android.nrfthingy.common.Utils.EXTRA_URL;
 import static no.nordicsemi.android.nrfthingy.common.Utils.GROUP_ID_ABOUT;
 import static no.nordicsemi.android.nrfthingy.common.Utils.GROUP_ID_ADD_THINGY;
@@ -182,7 +177,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private DrawerLayout mDrawerLayout;
     private ActionBarDrawerToggle mDrawerToggle;
 
-    //important for NFC Scan
+    //variables for NFC Scan
     public static String NFCID = null;
     public static String NFCURL = null;
     public static String NFCLINK = null;
@@ -243,9 +238,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         public void onDeviceDisconnected(BluetoothDevice device, int connectionState) {
             updateBatteryLevelVisibility(View.GONE);
             hideProgressDialog();
-            if (mConnectedBleDeviceList.contains(device)) {
-                mConnectedBleDeviceList.remove(device);
-            }
+            mConnectedBleDeviceList.remove(device);
             updateUiOnDeviceDisconnected(device);
         }
 
@@ -788,6 +781,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         item.setChecked(true);
     }
 
+    /**
+     * This method performes the navigation of fragments on the Main Activity
+     * @param item = Environment, UI, Motion, Sound, Cloud and NFC
+     */
     private void performFragmentNavigation(final MenuItem item) {
         final int itemId = item.getItemId();
         FragmentManager fragmentManager = getSupportFragmentManager();
@@ -878,13 +875,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 break;
             case R.id.navigation_nfc:
                 if (fragmentManager.findFragmentByTag(NFC_FRAGMENT) == null) {
+                        //Disableing notifications from other fragments
                     if (mThingySdkManager.isConnected(mDevice)) {
                         mThingySdkManager.enableMotionNotifications(mDevice, false);
                         mThingySdkManager.enableUiNotifications(mDevice, false);
                         mThingySdkManager.enableSoundNotifications(mDevice, false);
                         mThingySdkManager.enableEnvironmentNotifications(mDevice, false);
                     }
-
 
                     final String fragmentTag = mFragmentTag;
                     clearFragments(fragmentTag);
@@ -901,6 +898,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         checkSelection(item);
     }
 
+    /**
+     * This is the method starting the environment fragment as the default one on start
+     */
     private void performFragmentNavigation() {
         FragmentManager fragmentManager = getSupportFragmentManager();
         switch (mFragmentTag) {
@@ -1152,7 +1152,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
             //When a new fragment is to be displayed clear the existing fragments
             clearFragments();
-            //displayFragment();
             performFragmentNavigation();
             invalidateOptionsMenu();
             mOldDevice = device;
@@ -1169,7 +1168,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 if (mOldDevice != null && !device.equals(mOldDevice)) {
                     clearFragments();
                 }
-                //displayFragment();
                 performFragmentNavigation();
                 invalidateOptionsMenu();
                 mOldDevice = device;
@@ -1863,6 +1861,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+    /**
+     * This method handles the NFC scanning
+     */
     private void handleNfcForegroundDispatch(final Intent intent) {
         if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(intent.getAction())) {
             final Parcelable[] rawMsgs = intent.getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES);
@@ -1876,11 +1877,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             final String mimeType = toMimeType(record);
                             if (mimeType
                                     != null && mimeType.equals(EXTRA_ADDRESS_DATA)) {
-                                /*  final String address */
+                                // ID will be saved in that variable
                                 NFCID = readAddressPayload(record.getPayload());
                             }
                             else if (mimeType != null && mimeType.equals(EXTRA_URL)) {
-
+                                // Nordic website url will be saved in this variable
                                 NFCURL = "http:// www." + readExternalPayload(record.getPayload());
                             }
                                 if (TextUtils.isEmpty(NFCID)) {
@@ -1906,6 +1907,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                     showNfcMessage(NFCID);
                                 }
                             } else if (record.getTnf() == NdefRecord.TNF_EXTERNAL_TYPE){
+                            // Link to the Google Play Store will be saved here
                             NFCLINK = readExternalPayload(record.getPayload());
                         }
                         }
