@@ -1882,7 +1882,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             }
                             else if (mimeType != null && mimeType.equals(EXTRA_URL)) {
                                 // Nordic website url will be saved in this variable
-                                NFCURL = "http:// www." + readExternalPayload(record.getPayload());
+                                NFCURL = "http:/" + "/www." + readExternalPayload(record.getPayload());
                             }
                                 if (TextUtils.isEmpty(NFCID)) {
                                     showToast(this, getString(R.string.error_reading_nfc_tag));

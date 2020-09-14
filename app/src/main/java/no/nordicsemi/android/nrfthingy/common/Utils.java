@@ -626,11 +626,12 @@ public class Utils {
             final int length = payload.length;
             final byte[] newPayload = new byte[length];
             System.arraycopy(payload, 0, newPayload, 0, newPayload.length);
-            final String addressPayload = new String(newPayload, Charset.forName("UTF-8"));
+            String addressPayload = new String(newPayload, Charset.forName("UTF-8"));
+            addressPayload = addressPayload.replaceAll(" ", "");
+            addressPayload = addressPayload.replaceAll("\\p{Cntrl}", "");
             if (TextUtils.isEmpty(addressPayload)) {
                 return null;
             }else {
-
                 return addressPayload;
             }
         } catch (Exception ex) {
