@@ -439,6 +439,7 @@
     <string name="event_name_temperature_update">Event name: temperature_update</string>
     <string name="event_name_pressure_update">Event name: pressure_update</string>
     <string name="event_name_button_press">Event name: button_press</string>
+    <string name="nfc">NFC</string>
 
     <string-array name="gas_mode">
         <item>1 second</item>
@@ -471,4 +472,9 @@
         <item quantity="other">%d are disconnected</item>
         <item quantity="many">%d are disconnected</item>
     </plurals>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="android_app_link">Android App Link:</string>
+    <string name="nordic_website_link">Nordic website link:</string>
+    <string name="mac_address">Mac-address:</string>
 </resources>

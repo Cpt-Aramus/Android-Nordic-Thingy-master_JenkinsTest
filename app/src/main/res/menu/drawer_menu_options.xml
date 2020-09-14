@@ -65,6 +65,11 @@
             android:checked="false"
             android:icon="@drawable/ic_cloud_upload"
             android:title="@string/cloud_title" />
+        <item
+            android:id="@+id/navigation_nfc"
+            android:checked="false"
+            android:icon="@drawable/ic_motion"
+            android:title="@string/nfc" />
     </group>
     <group
         android:checkableBehavior="single"

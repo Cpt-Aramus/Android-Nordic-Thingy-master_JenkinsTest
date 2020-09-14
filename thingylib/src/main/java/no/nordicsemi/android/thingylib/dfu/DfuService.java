@@ -79,7 +79,6 @@ package no.nordicsemi.android.thingylib.dfu;
 import android.app.Activity;
 
 import no.nordicsemi.android.dfu.DfuBaseService;
-import no.nordicsemi.android.thingylib.BuildConfig;
 
 public class DfuService extends DfuBaseService {
     @Override

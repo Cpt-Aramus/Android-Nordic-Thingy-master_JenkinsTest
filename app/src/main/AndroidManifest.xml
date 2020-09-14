@@ -49,12 +49,11 @@
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.NFC" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-feature android:name="android.hardware.nfc" android:required="true" />
 
     <uses-feature android:name="android.hardware.bluetooth_le"
                   android:required="true" />
 
-    <uses-feature android:name="android.hardware.nfc"
-                  android:required="false" />
 
     <application
         android:name="androidx.multidex.MultiDexApplication"
@@ -76,6 +75,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
         <activity android:name=".WelcomeActivity" />
         <activity
             android:name=".configuration.InitialConfigurationActivity"

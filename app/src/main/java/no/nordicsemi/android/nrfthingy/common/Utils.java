@@ -47,6 +47,7 @@ import android.bluetooth.BluetoothManager;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.nfc.NdefRecord;
 import android.os.Build;
 import android.text.TextUtils;
 import android.util.Log;
@@ -89,6 +90,8 @@ public class Utils {
     public static final String EXTRA_APP = "application/vnd.no.nordicsemi.type.app";
     public static final String EXTRA_ADDRESS_DATA = "text/plain";
 
+    public static final String EXTRA_URL = "U";
+
     public static final String EXTRA_DEVICE = "EXTRA_DEVICE";
     public static final String EXTRA_DEVICE_NAME = "EXTRA_DEVICE_NAME";
 
@@ -118,6 +121,7 @@ public class Utils {
     public static final String UI_FRAGMENT = "UI_FRAGMENT";
     public static final String SOUND_FRAGMENT = "SOUND_FRAGMENT";
     public static final String CLOUD_FRAGMENT = "CLOUD_FRAGMENT";
+    public static final String NFC_FRAGMENT = "NFC_FRAGMENT";
     public static final String PROGRESS_DIALOG_TAG = "PROG_DIALOG";
     public static final String NFC_DIALOG_TAG = "NFC_DIALOG";
 
@@ -616,6 +620,25 @@ public class Utils {
             return null;
         }
     }
+
+    public static String readExternalPayload(final byte[] payload) {
+        try {
+            final int length = payload.length;
+            final byte[] newPayload = new byte[length];
+            System.arraycopy(payload, 0, newPayload, 0, newPayload.length);
+            final String addressPayload = new String(newPayload, Charset.forName("UTF-8"));
+            if (TextUtils.isEmpty(addressPayload)) {
+                return null;
+            }else {
+
+                return addressPayload;
+            }
+        } catch (Exception ex) {
+            return null;
+        }
+    }
+
+
 
     public static BluetoothDevice getBluetoothDevice(final Context context, final String address) {
         final BluetoothManager bm = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);

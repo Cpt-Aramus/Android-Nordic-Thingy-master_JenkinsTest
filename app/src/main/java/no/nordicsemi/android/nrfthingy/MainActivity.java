@@ -56,9 +56,11 @@ import android.location.LocationManager;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
+import android.nfc.FormatException;
 import android.nfc.NdefMessage;
 import android.nfc.NdefRecord;
 import android.nfc.NfcAdapter;
+import android.nfc.Tag;
 import android.nfc.tech.NfcF;
 import android.os.Build;
 import android.os.Bundle;
@@ -82,11 +84,16 @@ import android.widget.Toast;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
 
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
@@ -128,7 +135,10 @@ import static no.nordicsemi.android.nrfthingy.common.Utils.CLOUD_FRAGMENT;
 import static no.nordicsemi.android.nrfthingy.common.Utils.CURRENT_DEVICE;
 import static no.nordicsemi.android.nrfthingy.common.Utils.ENVIRONMENT_FRAGMENT;
 import static no.nordicsemi.android.nrfthingy.common.Utils.EXTRA_ADDRESS_DATA;
+import static no.nordicsemi.android.nrfthingy.common.Utils.EXTRA_DATA_URL;
 import static no.nordicsemi.android.nrfthingy.common.Utils.EXTRA_DEVICE;
+import static no.nordicsemi.android.nrfthingy.common.Utils.EXTRA_URI;
+import static no.nordicsemi.android.nrfthingy.common.Utils.EXTRA_URL;
 import static no.nordicsemi.android.nrfthingy.common.Utils.GROUP_ID_ABOUT;
 import static no.nordicsemi.android.nrfthingy.common.Utils.GROUP_ID_ADD_THINGY;
 import static no.nordicsemi.android.nrfthingy.common.Utils.GROUP_ID_DFU;
@@ -139,6 +149,7 @@ import static no.nordicsemi.android.nrfthingy.common.Utils.ITEM_ID_DFU;
 import static no.nordicsemi.android.nrfthingy.common.Utils.ITEM_ID_SETTINGS;
 import static no.nordicsemi.android.nrfthingy.common.Utils.MOTION_FRAGMENT;
 import static no.nordicsemi.android.nrfthingy.common.Utils.NFC_DIALOG_TAG;
+import static no.nordicsemi.android.nrfthingy.common.Utils.NFC_FRAGMENT;
 import static no.nordicsemi.android.nrfthingy.common.Utils.NOTIFICATION_ID;
 import static no.nordicsemi.android.nrfthingy.common.Utils.PROGRESS_DIALOG_TAG;
 import static no.nordicsemi.android.nrfthingy.common.Utils.REQUEST_ACCESS_COARSE_LOCATION;
@@ -152,6 +163,7 @@ import static no.nordicsemi.android.nrfthingy.common.Utils.checkIfVersionIsQ;
 import static no.nordicsemi.android.nrfthingy.common.Utils.getBluetoothDevice;
 import static no.nordicsemi.android.nrfthingy.common.Utils.isConnected;
 import static no.nordicsemi.android.nrfthingy.common.Utils.readAddressPayload;
+import static no.nordicsemi.android.nrfthingy.common.Utils.readExternalPayload;
 import static no.nordicsemi.android.nrfthingy.common.Utils.showNfcDisabledWarning;
 import static no.nordicsemi.android.nrfthingy.common.Utils.showToast;
 
@@ -169,6 +181,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private NavigationView mNavigationView;
     private DrawerLayout mDrawerLayout;
     private ActionBarDrawerToggle mDrawerToggle;
+
+    //important for NFC Scan
+    public static String NFCID = null;
+    public static String NFCURL = null;
+    public static String NFCLINK = null;
+
 
     private Toolbar mActivityToolbar;
 
@@ -206,6 +224,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private TextView mBatteryLevel;
     private ImageView mBatteryLevelImg;
     private NFCTagFoundDialogFragment mNfcTagFoundDialogFragment;
+
 
     private ThingyListener mThingyListener = new ThingyListener() {
         @Override
@@ -516,6 +535,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
+
+
     private void registerNfcBroadcastReceiver() {
         if (mNfcAdapter != null) {
             registerReceiver(mNfcAdapterStateChangedReceiver, new IntentFilter(NfcAdapter.ACTION_ADAPTER_STATE_CHANGED));
@@ -528,6 +549,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     @Override
     protected void onNewIntent(final Intent intent) {
         super.onNewIntent(intent);
@@ -854,6 +876,23 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     getSupportFragmentManager().beginTransaction().add(R.id.container, mapFragment, mFragmentTag).commit();
                 }
                 break;
+            case R.id.navigation_nfc:
+                if (fragmentManager.findFragmentByTag(NFC_FRAGMENT) == null) {
+                    if (mThingySdkManager.isConnected(mDevice)) {
+                        mThingySdkManager.enableMotionNotifications(mDevice, false);
+                        mThingySdkManager.enableUiNotifications(mDevice, false);
+                        mThingySdkManager.enableSoundNotifications(mDevice, false);
+                        mThingySdkManager.enableEnvironmentNotifications(mDevice, false);
+                    }
+
+
+                    final String fragmentTag = mFragmentTag;
+                    clearFragments(fragmentTag);
+                    mFragmentTag = NFC_FRAGMENT;
+                    NfcScanFragment mapFragment = NfcScanFragment.newInstance(mDevice);
+                    getSupportFragmentManager().beginTransaction().add(R.id.container, mapFragment, mFragmentTag).commit();
+                }
+                break;
         }
 
         if (mBinder != null) {
@@ -1092,6 +1131,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 break;
             case CLOUD_FRAGMENT:
                 checkSelection(mNavigationView.getMenu().findItem(R.id.navigation_cloud));
+                break;
+            case NFC_FRAGMENT:
+                checkSelection(mNavigationView.getMenu().findItem(R.id.navigation_nfc));
                 break;
         }
     }
@@ -1820,6 +1862,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         fragment.show(getSupportFragmentManager(), null);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     private void handleNfcForegroundDispatch(final Intent intent) {
         if (NfcAdapter.ACTION_NDEF_DISCOVERED.equals(intent.getAction())) {
             final Parcelable[] rawMsgs = intent.getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES);
@@ -1830,38 +1873,47 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                     for (NdefRecord record : records) {
                         if (record.getTnf() == NdefRecord.TNF_WELL_KNOWN) {
-                            final String mimeType = record.toMimeType();
-                            if (mimeType != null && mimeType.equals(EXTRA_ADDRESS_DATA)) {
-                                final String address = readAddressPayload(record.getPayload());
-                                if (TextUtils.isEmpty(address)) {
+                            final String mimeType = toMimeType(record);
+                            if (mimeType
+                                    != null && mimeType.equals(EXTRA_ADDRESS_DATA)) {
+                                /*  final String address */
+                                NFCID = readAddressPayload(record.getPayload());
+                            }
+                            else if (mimeType != null && mimeType.equals(EXTRA_URL)) {
+
+                                NFCURL = "http:// www." + readExternalPayload(record.getPayload());
+                            }
+                                if (TextUtils.isEmpty(NFCID)) {
                                     showToast(this, getString(R.string.error_reading_nfc_tag));
                                     return;
                                 }
 
-                                if (mDatabaseHelper.isExist(address)) {
+                                if (mDatabaseHelper.isExist(NFCID)) {
                                     if (isBleEnabled()) {
-                                        final BluetoothDevice device = getBluetoothDevice(this, address);
+                                        final BluetoothDevice device = getBluetoothDevice(this, NFCID);
                                         if (device != null) {
                                             if (!isConnected(device, mThingySdkManager.getConnectedDevices())) {
-                                                mAddress = address;
+                                                mAddress = NFCID;
                                                 prepareForScanning(true);
                                             } else {
-                                                showToast(this, getString(R.string.thingy_already_connected, mDatabaseHelper.getDeviceName(address)));
+                                                showToast(this, getString(R.string.thingy_already_connected, mDatabaseHelper.getDeviceName(NFCID)));
                                             }
                                         } else {
                                             showToast(this, getString(R.string.error_nfc_tag));
                                         }
                                     }
                                 } else {
-                                    showNfcMessage(address);
+                                    showNfcMessage(NFCID);
                                 }
-                            }
+                            } else if (record.getTnf() == NdefRecord.TNF_EXTERNAL_TYPE){
+                            NFCLINK = readExternalPayload(record.getPayload());
+                        }
                         }
                     }
                 }
             }
         }
-    }
+
 
     @Override
     public void configureThingy(final String address) {
@@ -1883,6 +1935,26 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
         mNfcTagFoundDialogFragment.show(getSupportFragmentManager(), NFC_DIALOG_TAG);
     }
+
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+    public String toMimeType(NdefRecord record) {
+
+        switch (record.getTnf()) {
+            case NdefRecord.TNF_WELL_KNOWN:
+                if (Arrays.equals(record.getType(), NdefRecord.RTD_TEXT)) {
+                    return "text/plain";
+                } else if(Arrays.equals(record.getType(), NdefRecord.RTD_URI)) {
+                    return "U";
+                }
+                break;
+
+            case NdefRecord.TNF_MIME_MEDIA:
+                String mimeType = new String(record.getType(), StandardCharsets.US_ASCII);
+                return Intent.normalizeMimeType(mimeType);
+        }
+        return null;
+    }
+
 
     private void onServiceDiscoveryCompletion(final BluetoothDevice device) {
         hideProgressDialog();

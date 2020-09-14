@@ -25,6 +25,13 @@ android {
         maxProcessCount 2
         javaMaxHeapSize "2g"
     }
+    sourceSets {
+        main {
+            res {
+                srcDirs 'src/main/res', 'src/main/res/fragment_nfc'
+            }
+        }
+    }
 
     repositories {
         maven { url "https://jitpack.io" }
@@ -50,5 +57,6 @@ dependencies {
     implementation 'com.github.PhilJay:MPAndroidChart:v2.2.5'
     // 3D engine
     implementation 'org.rajawali3d:rajawali:1.0.325@aar'
+    implementation 'androidx.legacy:legacy-support-v4:1.0.0'
 
 }
