@@ -1,12 +1,22 @@
 package no.nordicsemi.android.nrfthingy;
 
+import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothDevice;
+import android.content.Context;
 import android.nfc.NfcAdapter;
 import android.os.Bundle;
+
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.ListAdapter;
+import androidx.recyclerview.widget.RecyclerView;
+
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.BaseAdapter;
+import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 import no.nordicsemi.android.nrfthingy.common.Utils;
@@ -21,10 +31,16 @@ import no.nordicsemi.android.nrfthingy.common.Utils;
  */
 public class NfcScanFragment extends Fragment {
 
+    //Required stuff for nfc scan
     private TextView appLinkBlank;
     private TextView idBlank;
     private TextView websiteLinkBlank;
     private NfcAdapter usedNfcAdapter;
+    private ListView nfcListView;
+    private ListViewAdapter nfcAdapter;
+    private String[] typeOfInformation = {"Android App Link:", "Mac-address:", "Nordic website link:"};
+    private String[] nfcScanInformation;
+    private int[] imageIds = {R.drawable.android_icon,R.drawable.nfc_icon, R.drawable.index};
 
 
 
@@ -74,6 +90,7 @@ public class NfcScanFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         final View rootView = inflater.inflate(R.layout.fragment_nfc_scanning, container, false);
+
         if (getArguments() != null) {
             nfcLink = getArguments().getString(NFC_LINK);
         }
@@ -83,14 +100,52 @@ public class NfcScanFragment extends Fragment {
         if (getArguments() != null) {
             nfcUrl = getArguments().getString(NFC_URL);
         }
-        appLinkBlank = rootView.findViewById(R.id.app_link_blank);
-        appLinkBlank.setText(nfcLink);
-        idBlank = rootView.findViewById(R.id.mac_address_blank);
-        idBlank.setText(nfcId);
-        websiteLinkBlank = rootView.findViewById(R.id.website_link_blank);
-        websiteLinkBlank.setText(nfcUrl);
+
+        nfcScanInformation = new String[]{nfcLink, nfcId, nfcUrl};
+
+        ListView display = rootView.findViewById(R.id.listView);
+        nfcAdapter = new ListViewAdapter();
+        display.setAdapter(nfcAdapter);
         // Inflate the layout for this fragment
         return rootView;
+    }
+
+    private class ListViewAdapter extends BaseAdapter {
+
+        public ListViewAdapter() {
+            super();
+
+        }
+
+
+        @Override
+        public int getCount() {
+            return imageIds.length;
+        }
+
+        @Override
+        public Object getItem(int position) {
+            return null;
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return 0;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+
+           View view = getLayoutInflater().inflate(R.layout.list_view_item, null);
+            ImageView image = view.findViewById(R.id.imageViewItem);
+            TextView written = view.findViewById(R.id.textViewWritten);
+            TextView blank = view.findViewById(R.id.textViewBlank);
+
+            image.setImageResource(imageIds[position]);
+            written.setText(typeOfInformation[position]);
+            blank.setText(nfcScanInformation[position]);
+            return view;
+        }
     }
 }
 
